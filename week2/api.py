@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from cipher.caesar import CaesarCipher
-from cipher.vigenere import VigenereCipher # Thêm dòng này
+from cipher.vigenere import VigenereCipher
+from cipher.railfence import RailFenceCipher # Thêm dòng này
 
 app = Flask(__name__)
 
@@ -23,7 +24,7 @@ def caesar_decrypt():
     decrypted_text = caesar_cipher.decrypt_text(cipher_text, key)
     return jsonify({'decrypted_message': decrypted_text})
 
-#VIGENERE CIPHER ALGORITHM # Thêm phần này
+#VIGENERE CIPHER ALGORITHM
 vigenere_cipher = VigenereCipher()
 
 @app.route('/api/vigenere/encrypt', methods=['POST'])
@@ -40,6 +41,25 @@ def vigenere_decrypt():
     cipher_text = data['cipher_text']
     key = data['key']
     decrypted_text = vigenere_cipher.vigenere_decrypt(cipher_text, key)
+    return jsonify({'decrypted_text': decrypted_text})
+
+# RAILFENCE CIPHER ALGORITHM # Thêm phần này
+railfence_cipher = RailFenceCipher()
+
+@app.route('/api/railfence/encrypt', methods=['POST'])
+def railfence_encrypt(): # Đổi tên hàm từ 'encrypt' thành 'railfence_encrypt' để tránh trùng lặp
+    data = request.json
+    plain_text = data['plain_text']
+    key = int(data['key'])
+    encrypted_text = railfence_cipher.rail_fence_encrypt(plain_text, key)
+    return jsonify({'encrypted_text': encrypted_text})
+
+@app.route('/api/railfence/decrypt', methods=['POST'])
+def railfence_decrypt(): # Đổi tên hàm từ 'decrypt' thành 'railfence_decrypt' để tránh trùng lặp
+    data = request.json
+    cipher_text = data['cipher_text']
+    key = int(data['key'])
+    decrypted_text = railfence_cipher.rail_fence_decrypt(cipher_text, key)
     return jsonify({'decrypted_text': decrypted_text})
 
 #main function
