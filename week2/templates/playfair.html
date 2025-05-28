@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playfair Cipher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light gray background, similar to Bootstrap's default */
+            padding-top: 60px; /* Add padding to prevent content from being hidden by the fixed button */
+        }
+        .container {
+            margin-top: 20px; /* Adjust margin-top for content below the button */
+            background-color: #ffffff;
+            border-radius: 0.25rem; /* Bootstrap default rounded corners */
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075); /* Bootstrap default shadow */
+            padding: 1.5rem;
+        }
+        /* Custom styling for the back button to position it absolutely */
+        .back-button-container {
+            position: absolute;
+            top: 15px; /* Khoảng cách từ trên xuống */
+            left: 15px; /* Khoảng cách từ trái sang */
+            z-index: 1000; /* Đảm bảo nút nằm trên các phần tử khác */
+        }
+        /* Styling for the Playfair matrix table */
+        .playfair-matrix-table {
+            margin: 0 auto; /* Căn giữa bảng */
+            border-collapse: collapse; /* Quan trọng để đường kẻ không bị gấp đôi */
+        }
+        .playfair-matrix-table td {
+            border: 1px solid black; /* Đổi màu đường kẻ thành đen cho rõ hơn */
+            width: 40px;
+            height: 40px;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-align: center; /* Căn giữa nội dung theo chiều ngang */
+            vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
+        }
+        /* Bootstrap form control and button styling adjustments */
+        .form-control {
+            border-radius: 0.25rem;
+        }
+        .btn {
+            border-radius: 0.25rem;
+        }
+        .text-primary {
+            color: #007bff !important; /* Ensure Bootstrap primary blue */
+        }
+        .text-center {
+            text-align: center !important;
+        }
+        .font-weight-bold {
+            font-weight: 700 !important;
+        }
+        .mb-3 { margin-bottom: 1rem !important; }
+        .mb-4 { margin-bottom: 1.5rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+        /* Additional Bootstrap-like styles for consistency */
+        .p-4 { padding: 1.5rem !important; }
+        .bg-light { background-color: #f8f9fa !important; }
+        .rounded { border-radius: 0.25rem !important; }
+        .shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
+        .btn-block { display: block; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="back-button-container">
+        <a href="/" class="btn btn-secondary d-inline-flex align-items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor" style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H16a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Quay lại Trang chủ
+        </a>
+    </div>
+
+    <div class="container">
+        <h1 class="text-center font-weight-bold mb-4" style="font-size: 25px;">PLAYFAIR CIPHER</h1>
+
+        <h2 class="font-weight-bold text-primary mb-3">ENCRYPTION</h2>
+        <form id="encryptForm" method="POST" action="/playfair/encrypt" class="mb-4 p-4 bg-light rounded shadow-sm">
+            <div class="form-group mb-3">
+                <label for="inputPlainText">Plain text:</label>
+                <input type="text" id="inputPlainText" class="form-control" name="inputPlainText" placeholder="Input Plain Text" required autofocus/>
+            </div>
+            <div class="form-group mb-3">
+                <label for="inputKeyPlain">Key:</label>
+                <input type="text" id="inputKeyPlain" class="form-control" name="inputKeyPlain" placeholder="Input Key (alphabetic, no 'J')" required/>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Encrypt</button>
+            <div class="mt-3">
+                <label for="encryptedResult">Encrypted Result:</label>
+                <textarea id="encryptedResult" class="form-control" rows="3" readonly></textarea>
+            </div>
+        </form>
+
+        <h2 class="font-weight-bold text-primary mb-3">DECRYPTION</h2>
+        <form id="decryptForm" method="POST" action="/playfair/decrypt" class="mb-4 p-4 bg-light rounded shadow-sm">
+            <div class="form-group mb-3">
+                <label for="inputCipherText">Cipher text:</label>
+                <input type="text" id="inputCipherText" class="form-control" name="inputCipherText" placeholder="Input Cipher Text" required/>
+            </div>
+            <div class="form-group mb-3">
+                <label for="inputKeyCipher">Key:</label>
+                <input type="text" id="inputKeyCipher" class="form-control" name="inputKeyCipher" placeholder="Input Key (alphabetic, no 'J')" required/>
+            </div>
+            <button type="submit" class="btn btn-success btn-block">Decrypt</button>
+            <div class="mt-3">
+                <label for="decryptedResult">Decrypted Result:</label>
+                <textarea id="decryptedResult" class="form-control" rows="3" readonly></textarea>
+            </div>
+        </form>
+
+        <h2 class="font-weight-bold text-primary mb-3">MATRIX GENERATION</h2>
+        <div class="mb-4 p-4 bg-light rounded shadow-sm">
+            <div class="form-group mb-3">
+                <label for="inputMatrixKey">Key for Matrix:</label>
+                <input type="text" id="inputMatrixKey" class="form-control" placeholder="Input Key to Generate Matrix" required/>
+            </div>
+            <button id="generateMatrixBtn" type="button" class="btn btn-info btn-block mb-3">Generate Matrix</button>
+            <div class="playfair-matrix-container mt-4">
+                <h5>Generated Playfair Matrix:</h5>
+                <table id="playfairMatrixTable" class="playfair-matrix-table">
+                    </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" xintegrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" xintegrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" xintegrity="sha384-VHvPCCyXqtD5MNyC7EVaeX9oNSpApQh2NEqMll7wDKgS7iRzMdDKersq0h/EcebQ" crossorigin="anonymous"></script>
+
+    <script>
+        /**
+         * Generates the 5x5 Playfair matrix based on the provided key.
+         * The matrix excludes 'J' and treats 'I' and 'J' as the same character.
+         *
+         * @param {string} key The key string to generate the matrix.
+         * @returns {Array<Array<string>>} A 2D array representing the 5x5 Playfair matrix.
+         */
+        function generatePlayfairMatrix(key) {
+            const alphabet = "ABCDEFGHIKLMNOPQRSTUVWXYZ"; // Bảng chữ cái tiếng Anh (không có 'J')
+            // Xử lý khóa: chuyển thành chữ hoa, loại bỏ ký tự không phải chữ cái, thay thế 'J' bằng 'I'
+            let processedKey = key.toUpperCase().replace(/[^A-Z]/g, '').replace(/J/g, 'I');
+            let keyAlphabet = '';
+            let usedChars = new Set();
+
+            // Thêm các ký tự duy nhất từ khóa vào keyAlphabet
+            for (let char of processedKey) {
+                if (!usedChars.has(char)) {
+                    keyAlphabet += char;
+                    usedChars.add(char);
+                }
+            }
+
+            // Thêm các ký tự còn lại của bảng chữ cái vào keyAlphabet
+            for (let char of alphabet) {
+                if (!usedChars.has(char)) {
+                    keyAlphabet += char;
+                    usedChars.add(char);
+                }
+            }
+
+            // Điền vào ma trận 5x5
+            const matrix = [];
+            let k = 0;
+            for (let i = 0; i < 5; i++) {
+                const row = [];
+                for (let j = 0; j < 5; j++) {
+                    row.push(keyAlphabet[k++]);
+                }
+                matrix.push(row);
+            }
+            return matrix;
+        }
+
+        /**
+         * Displays the generated Playfair matrix in the HTML table.
+         * It ensures a clear 5x5 grid layout.
+         *
+         * @param {Array<Array<string>>} matrix The 2D array representing the Playfair matrix.
+         */
+        function displayMatrix(matrix) {
+            const table = document.getElementById('playfairMatrixTable');
+            table.innerHTML = ''; // Xóa nội dung cũ của bảng
+
+            // Hiển thị thông báo nếu ma trận rỗng
+            if (!matrix || matrix.length === 0 || matrix[0].length === 0) {
+                table.innerHTML = '<tr><td colspan="5" class="text-center text-secondary py-4">Nhập khóa để xem ma trận.</td></tr>';
+                return;
+            }
+
+            // Duyệt qua ma trận và tạo các hàng (tr) và ô (td) cho bảng
+            for (let i = 0; i < 5; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < 5; j++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = matrix[i][j];
+                    // Sử dụng class từ CSS tùy chỉnh thay vì playfair-matrix-cell
+                    // cell.classList.add('playfair-matrix-cell');
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+        }
+
+        // Event listener cho nút "Generate Matrix"
+        document.getElementById('generateMatrixBtn').addEventListener('click', function() {
+            const key = document.getElementById('inputMatrixKey').value;
+            const matrix = generatePlayfairMatrix(key);
+            displayMatrix(matrix);
+        });
+
+        // Xử lý gửi biểu mẫu mã hóa
+        document.getElementById('encryptForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Ngăn chặn gửi biểu mẫu mặc định
+
+            const formData = new FormData(this);
+            const plainText = formData.get('inputPlainText');
+            const key = formData.get('inputKeyPlain');
+
+            try {
+                const url = this.action;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ plain_text: plainText, key: key })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Something went wrong');
+                }
+
+                const result = await response.json();
+                document.getElementById('encryptedResult').value = result.encrypted_text;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('encryptedResult').value = 'Error: ' + error.message;
+            }
+        });
+
+        // Xử lý gửi biểu mẫu giải mã
+        document.getElementById('decryptForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Ngăn chặn gửi biểu mẫu mặc định
+
+            const formData = new FormData(this);
+            const cipherText = formData.get('inputCipherText');
+            const key = formData.get('inputKeyCipher');
+
+            try {
+                const url = this.action;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ cipher_text: cipherText, key: key })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Something went wrong');
+                }
+
+                const result = await response.json();
+                document.getElementById('decryptedResult').value = result.decrypted_text;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('decryptedResult').value = 'Error: ' + error.message;
+            }
+        });
+
+        // Đồng bộ hóa các trường nhập khóa: Khi khóa mã hóa thay đổi, cập nhật trường nhập khóa ma trận
+        document.getElementById('inputKeyPlain').addEventListener('input', function() {
+            document.getElementById('inputMatrixKey').value = this.value; // Sử dụng inputMatrixKey
+            const key = this.value;
+            const matrix = generatePlayfairMatrix(key);
+            displayMatrix(matrix);
+        });
+
+        // Tạo ma trận ban đầu khi tải trang
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialKey = document.getElementById('inputKeyPlain').value;
+            document.getElementById('inputMatrixKey').value = initialKey; // Đồng bộ giá trị ban đầu
+            const matrix = generatePlayfairMatrix(initialKey);
+            displayMatrix(matrix);
+        });
+    </script>
+</body>
+</html>
